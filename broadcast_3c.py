@@ -72,7 +72,9 @@ async def gossip3c(req: Request) -> Body:
     await node.log("Received gossip from sender: {}, message: {}".format(req.src, message))
     if message not in messages:  # if its not already present, save and share with neighbours
         messages.add(message)
-        await share_with_neigh(message)
+        # it also works if this is done in same loop
+        # throughput was 89 in same loop and when running concurrently got 96 throughput
+        asyncio.create_task(share_with_neigh(message)) # run it asyncly or concurrently in another loop
     # Do not share with neighbours again here multiple times since it might lead to infinite loop
     # Each node should take care of updating its neighbour only once
     # Check if the message is already present in set, if its preset then don't send
